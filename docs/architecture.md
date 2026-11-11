@@ -226,6 +226,67 @@ A one-off command in the binary (`fooscup import <xlsx>`) reads the workbook and
 - Can a match start before its scheduled day? Default: yes, admins decide.
 - Head-to-head as a further tiebreak, or keep shared ranks as the sheet does. Default: shared ranks.
 
-## 16. Next
+## 16. Visual theme: "Paper"
 
-UI/UX design phase on the same canvas: colour, type, components, states. Then build.
+Status: **locked** 11 Nov 2026. Screens on the canvas, rows 6 to 8. One fixed theme on every device. No dark mode, no toggle.
+
+### Tokens
+
+| Token | Value | Use |
+|---|---|---|
+| `bg` | #E6E9EF | Page background |
+| `surface` | #F5F7FA | Cards, header, nav |
+| `surface-2` | #DCE1EA | Confirmed rows, table headers, disabled buttons |
+| `white` | #FFFFFF | Inputs, secondary buttons |
+| `border` | #C5CCD9 | Card and input borders |
+| `text` | #141B2B | Body text, ink header bars, score tiles |
+| `body` | #3E4A66 | Secondary paragraphs |
+| `muted` | #5B6880 | Labels, full names, metadata |
+| `faint` | #9AA5BB | Placeholders, disabled text |
+| `brand` | #2B5BC9 | Primary buttons, links, confirmed tag, active nav, qualifying line |
+| `brand-dark` | #1E4FA3 | Link hover |
+| `live` | #9BD34A | GOAL button, Live chip, live card border, live dot on ink |
+| `live-tint` | #EEF7DF | Live strip background on the scoring screen |
+| `live-text` | #3F7A0B | LIVE label, live dot and rank 1 on paper (contrast-safe) |
+| `on-live` | #0B1220 | Text on a live fill |
+
+Semantic rule: lime means "happening now", blue means "confirmed or do this", dashed blue means "provisional". Nothing else gets colour.
+
+### Type
+
+| Role | Font | Size / weight |
+|---|---|---|
+| Display scores | Space Grotesk 700, tabular numerals, letter-spacing -0.04em | Phone 52px, tablet 76px, desktop 112px, projector 180px |
+| Headings, nicknames | Space Grotesk 700 | 18px page title, 16 to 20px nickname |
+| Body | Inter 400 to 600 | 14px rows, 13px chips, 12px metadata, 11px full names and tags |
+| Section labels | Inter 600, uppercase, letter-spacing 0.08em | 12px, `muted` |
+| Tags | Inter 600, uppercase, letter-spacing 0.06em | 11px |
+
+Full name always sits under the nickname in `muted` at 11 or 12px. Nickname max 10 characters.
+
+### Shape and spacing
+
+- Radius: 12px cards and inputs, 10px buttons, 16 to 20px hero cards, pills for chips and nav tabs.
+- Page padding 16px phone, 24px tablet, 48px desktop, 64px projector. Content max-width 1344px on desktop.
+- Borders 1px `border`. Live card 1.5px `live` (3px on projector). Provisional 1.5px dashed `brand`.
+- No shadows, no glow, no gradients.
+
+### Components
+
+- **Header**: public pages use `surface` with a 1px bottom border, logo mark, title, Admin link. Admin pages use an ink (`text`) header bar so admin mode is unmistakable; links on ink are `live`.
+- **Nav**: phone has a 4-tab bottom bar with stroke icons, active in `brand`. Tablet and desktop move it to pill tabs in the header, active tab ink with white text.
+- **Match row**: avatar pair (overlapping initials, 30px), nickname line, full names and match number in `muted`, score or dash at right. Live = 1.5px lime border. Provisional = dashed blue border with a PROVISIONAL tag. Confirmed = `surface-2` fill.
+- **Live card**: `surface` with lime border, LIVE label in `live-text`, avatars with a 2px `brand` ring, big score.
+- **Buttons**: GOAL is lime fill with ink text, 80px tall on the scoring screen. Primary is `brand` fill. Secondary is white with `border`. Disabled is `surface-2` with `faint` text. Minimum touch target 44px.
+- **Standings table**: `surface` card, group letter and name in a `surface-2` header row, rank 1 in `live-text`, qualifying line as a 2px dashed `brand` rule under 4th place, players below it in `muted`.
+- **Chips** (day filters): active `brand` fill, inactive `surface` with border, 34px tall pill.
+- **Watermark**: company logo, bottom-right, 300px on phone, 560px tablet, 720px desktop, 820px projector, opacity 0.05 to 0.06, behind all content, on every screen.
+- **Projector**: same theme, 96px ink header with clock, live card 180px score, both group tables right, results ticker and cycle indicator in a footer.
+
+### Responsive
+
+Phone 390 is the reference. At 768px and up the bottom nav becomes header tabs and Home goes to two columns. At 1280px and up content is capped and centred. Fixtures, Standings and Bracket keep their single-column content centred at a readable width on wide screens.
+
+## 17. Next
+
+Build.
