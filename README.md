@@ -31,7 +31,3 @@ docs/architecture.md   rules, data model, API, deployment, theme
 seed/players.csv       players
 seed/matches.csv       group fixtures and results
 ```
-
-## Status
-
-Design locked. Build in progress.

@@ -1,7 +1,5 @@
 # Architecture
 
-Status: locked 2026-11-11. Design canvas: https://claude.ai/artifact/WvZsJHzx6Ht3UqzafPGT5T
-
 ## 1. Purpose
 
 A phone-first web app for an office foosball tournament. The public sees live scores, fixtures, standings and the knockout bracket without logging in. Admins score matches live from the table and confirm each other's results. A projector mode runs on a big screen.
@@ -99,7 +97,7 @@ POST   /api/actions/:id/approve
 POST   /api/actions/:id/reject
 POST   /api/tournament/lock-groups
 PATCH  /api/players/:id               nickname, avatar_url
-GET    /api/export                    xlsx
+GET    /api/export                    csv
 GET    /healthz                       process alive
 GET    /readyz                        database reachable
 ```
