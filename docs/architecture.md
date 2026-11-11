@@ -18,9 +18,9 @@ Players are data, not users.
 ## 3. Rules
 
 - 12 players, two groups of 6, assigned alternately by registration order.
-- Group stage: double round robin, 60 matches over three match days.
+- Group stage: double round robin, 60 matches over three match days. A match may be played before its scheduled day.
 - Race to 10. No draws. Win 1 point, loss 0.
-- Ranking: points, goal difference, goals scored. Players level on all three share a rank.
+- Ranking: points, goal difference, goals scored, head-to-head record between the tied players, then shared rank.
 - Top 4 per group qualify. Quarter-finals: A1 v B4, B1 v A4, A2 v B3, B2 v A3. Then semi-finals, third place, final.
 
 ## 4. Match lifecycle
@@ -50,10 +50,12 @@ Enforced server-side:
 
 | Layer | Choice |
 |---|---|
-| Server | Go, `net/http`. Rules engine, PIN auth, activity log, SSE fan-out. |
-| Database | SQLite via `modernc.org/sqlite`. One file on a persistent volume. Embedded migrations. |
-| UI | React, Vite, TypeScript, Tailwind. Built to static files and embedded in the binary. |
+| Server | Go standard library. `net/http` routing, `crypto` for hashing and signing, `embed` for the UI. Rules engine, PIN auth, activity log, SSE fan-out, push sending. |
+| Dependencies | `modernc.org/sqlite` (database driver), `golang.org/x/crypto` (argon2id). Nothing else. |
+| Database | SQLite. One file on a persistent volume. Embedded migrations. |
+| UI | React, Vite, TypeScript, Tailwind. Built to static files and embedded in the binary. Service worker for push. |
 | Live updates | Server-sent events on one endpoint. Polling every 15 s as fallback. |
+| Notifications | Web Push (VAPID). Admins opt in per device after unlocking. |
 | Image | Multi-stage Dockerfile, distroless nonroot, `linux/arm64`. |
 | Deployment | Single container on the owner's GitOps platform: k3s, Traefik with automatic TLS, Argo CD, secrets operator. |
 
@@ -69,6 +71,7 @@ All tables carry `tournament_id`.
 | `matches` | id, tournament_id, stage (group / qf / sf / third / final), group, match_no, match_day, scheduled_date, slot_a, slot_b, player_a_id, player_b_id, score_a, score_b, status, started_at, full_time_at, submitted_by, submitted_at, confirmed_by, confirmed_at, scorer_admin_id, send_back_note, version |
 | `match_events` | id, match_id, admin_id, type, payload, created_at |
 | `pending_actions` | id, match_id, action (pause / restart / abandon), requested_by, approved_by, status, created_at, resolved_at |
+| `push_subscriptions` | id, admin_id, endpoint, p256dh, auth, created_at, last_error |
 
 `status` ∈ not_started, live, paused, provisional, confirmed, abandoned. `slot_a` / `slot_b` hold seeding labels ("A1", "W-QF1") so the bracket renders before players are known. `version` increments on every write. `standings` is a view over confirmed matches. Email and department are never served publicly.
 
@@ -78,25 +81,27 @@ Public pages: `/`, `/fixtures`, `/standings`, `/bracket`, `/tv`.
 Admin pages: `/admin` (PIN), `/admin/matches`, `/admin/matches/:id` (live scoring), `/admin/matches/:id/confirm`, `/admin/more`.
 
 ```
-GET   /api/tournament                 players, matches, standings, bracket
-GET   /api/events                     SSE stream
-POST  /api/admin/login                PIN → cookie
-POST  /api/admin/logout
-POST  /api/matches/:id/start
-POST  /api/matches/:id/goal           { player: "a" | "b" }
-POST  /api/matches/:id/take-back
-POST  /api/matches/:id/submit
-POST  /api/matches/:id/confirm
-POST  /api/matches/:id/send-back      { note }
-POST  /api/matches/:id/correct        { score_a, score_b }
-POST  /api/matches/:id/request        { action: "pause" | "restart" | "abandon" }
-POST  /api/actions/:id/approve
-POST  /api/actions/:id/reject
-POST  /api/tournament/lock-groups
-PATCH /api/players/:id                nickname, avatar_url
-GET   /api/export                     xlsx
-GET   /healthz                        process alive
-GET   /readyz                         database reachable
+GET    /api/tournament                players, matches, standings, bracket
+GET    /api/events                    SSE stream
+POST   /api/admin/login               PIN → cookie
+POST   /api/admin/logout
+POST   /api/admin/push                register this device for push
+DELETE /api/admin/push                unregister
+POST   /api/matches/:id/start
+POST   /api/matches/:id/goal          { player: "a" | "b" }
+POST   /api/matches/:id/take-back
+POST   /api/matches/:id/submit
+POST   /api/matches/:id/confirm
+POST   /api/matches/:id/send-back     { note }
+POST   /api/matches/:id/correct       { score_a, score_b }
+POST   /api/matches/:id/request       { action: "pause" | "restart" | "abandon" }
+POST   /api/actions/:id/approve
+POST   /api/actions/:id/reject
+POST   /api/tournament/lock-groups
+PATCH  /api/players/:id               nickname, avatar_url
+GET    /api/export                    xlsx
+GET    /healthz                       process alive
+GET    /readyz                        database reachable
 ```
 
 Every write re-checks §4 and writes a `match_events` row. Non-API paths serve the UI.
@@ -108,7 +113,20 @@ Every write re-checks §4 and writes a `match_events` row. Non-API paths serve t
 - Public routes are read-only. Writes require the cookie and pass the rules engine.
 - Nicknames are set by admins only, max 10 characters.
 
-## 9. Configuration
+## 9. Notifications
+
+Sent to every admin except the one who caused the event:
+
+| Event | Message |
+|---|---|
+| Result submitted | "Tap-In 10–4 Big Job needs confirming" |
+| Result sent back | "Match #20 sent back: <note>" (to the submitter only) |
+| Pause / restart / abandon requested | "Admin 4 wants to pause match #3" |
+| Group stage ready to lock | "All 60 results confirmed" |
+
+Tapping a notification opens the relevant admin screen. Failed endpoints are dropped after three consecutive errors.
+
+## 10. Configuration
 
 Secrets, injected from the platform's secret store:
 
@@ -116,11 +134,12 @@ Secrets, injected from the platform's secret store:
 |---|---|
 | `ADMIN_PINS` | Comma-separated `label:argon2id-hash`. Seeded into `admins` on start. |
 | `COOKIE_SECRET` | HMAC key for the session cookie. |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Web Push signing keys. |
 | `LITESTREAM_*` | Object storage credentials for backups. |
 
-Plain env: `BASE_URL`, `DATABASE_PATH`, `PORT`.
+Plain env: `BASE_URL=https://foosballcup.webbies.dev`, `DATABASE_PATH`, `PORT`.
 
-## 10. Deployment
+## 11. Deployment
 
 - One pod, `Recreate` strategy, 1 Gi persistent volume mounted at `/data`. SQLite allows one writer.
 - Deploys cause a few seconds of downtime. Never deploy during a live match.
@@ -128,15 +147,15 @@ Plain env: `BASE_URL`, `DATABASE_PATH`, `PORT`.
 - Backups: Litestream sidecar replicating the database continuously to object storage.
 - Rollback: revert the image tag.
 
-## 11. Seed data
+## 12. Seed data
 
 `seed/players.csv` and `seed/matches.csv` hold the 12 players and 60 group fixtures, including results already played. `fooscup import` loads them once into a fresh database, inserting played matches as `confirmed` with a system admin "Import". Knockout placeholders are generated.
 
-## 12. Live updates
+## 13. Live updates
 
 Write → SQLite → in-process broadcaster → SSE to every open page. Clients refetch `/api/tournament` on reconnect. The projector cycles Live / Standings / Bracket / Results every 20 s and pins Live while a match is on.
 
-## 13. Visual theme
+## 14. Visual theme
 
 One fixed theme. No dark mode.
 
@@ -166,29 +185,24 @@ Components: public header on surface; admin header on ink. Phone has a 4-tab bot
 
 Breakpoints: 390 reference. 768 and up moves nav to the header and Home to two columns. 1280 and up caps content at 1344px.
 
-## 14. Out of scope
+## 15. Out of scope
 
-Public sign-ups, player accounts, notifications, staging environment, photo upload, multiple tournaments in the UI.
+Public sign-ups, player accounts, notifications to players, staging environment, photo upload, multiple tournaments in the UI.
 
-## 15. Decisions
+## 16. Decisions
 
 | Date | Decision |
 |---|---|
 | 2026-11-11 | Two actors: public and admin. Admins have personal PINs; every action is logged. |
-| 2026-11-11 | Race to 10, no draws, win 1 point. |
+| 2026-11-11 | Race to 10, no draws, win 1 point. Tiebreak ends with head-to-head, then shared rank. |
+| 2026-11-11 | Matches may start before their scheduled day. |
 | 2026-11-11 | Live scores public instantly. Final score needs submit by one admin and confirm by another. |
 | 2026-11-11 | Any admin can correct. Corrections return to provisional. |
 | 2026-11-11 | Pause, restart, abandon need a second admin. |
-| 2026-11-11 | Public sees provisional scores, tagged. Only confirmed results count. |
+| 2026-11-11 | Public sees provisional scores, labelled "Provisional". Only confirmed results count. |
 | 2026-11-11 | 60 minute sliding admin session. |
+| 2026-11-11 | Web Push to all admins when something needs their attention. |
 | 2026-11-11 | Projector mode included. |
 | 2026-11-11 | Nicknames, max 10 characters, admin-assigned, full name shown beneath. |
-| 2026-11-11 | Single Go binary, SQLite, embedded React UI, SSE. Prod only. |
+| 2026-11-11 | Go standard library, SQLite, embedded React UI, SSE. Prod only. |
 | 2026-11-11 | Theme: Paper. One fixed theme, no toggle. |
-
-## 16. Open
-
-- Word for a submitted-but-unconfirmed score. Currently "provisional".
-- Whether admins get a nudge when a result needs confirming.
-- Whether a match may start before its scheduled day. Default: yes.
-- Head-to-head as a further tiebreak. Default: shared ranks.
