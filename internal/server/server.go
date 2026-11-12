@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"time"
@@ -19,11 +20,18 @@ type Server struct {
 	logger *slog.Logger
 }
 
-func New(addr string, logger *slog.Logger, checks ...ReadinessCheck) *Server {
+// Deps are the data sources the HTTP handlers read from.
+type Deps struct {
+	Ready        []ReadinessCheck
+	LoadSnapshot SnapshotLoader
+	UI           fs.FS
+}
+
+func New(addr string, logger *slog.Logger, deps Deps) *Server {
 	return &Server{
 		http: &http.Server{
 			Addr:              addr,
-			Handler:           routes(logger, checks),
+			Handler:           routes(logger, deps),
 			ReadHeaderTimeout: 5 * time.Second,
 			IdleTimeout:       60 * time.Second,
 			// No WriteTimeout: the SSE stream on /api/events keeps responses open indefinitely.
@@ -60,4 +68,16 @@ func (s *Server) Run(ctx context.Context) error {
 		return fmt.Errorf("shutdown: %w", err)
 	}
 	return <-listenErr
+}
+
+func routes(logger *slog.Logger, deps Deps) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /healthz", handleHealthz)
+	mux.HandleFunc("GET /readyz", readyzHandler(logger, deps.Ready))
+	mux.HandleFunc("GET /api/tournament", tournamentHandler(logger, deps.LoadSnapshot))
+	mux.HandleFunc("GET /api/", apiNotFound)
+	if deps.UI != nil {
+		mux.Handle("GET /", uiHandler(deps.UI))
+	}
+	return mux
 }

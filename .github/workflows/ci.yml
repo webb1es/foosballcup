@@ -25,8 +25,29 @@ jobs:
       - name: Vulnerability scan
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
+  web:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Audit
+        run: npm audit --audit-level=high
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+
   image:
-    needs: test
+    needs: [ test, web ]
     runs-on: ubuntu-24.04
     permissions:
       contents: read

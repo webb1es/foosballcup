@@ -10,13 +10,6 @@ import (
 
 const readinessTimeout = 2 * time.Second
 
-func routes(logger *slog.Logger, checks []ReadinessCheck) http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", handleHealthz)
-	mux.HandleFunc("GET /readyz", readyzHandler(logger, checks))
-	return mux
-}
-
 func handleHealthz(w http.ResponseWriter, _ *http.Request) {
 	writeStatus(w, http.StatusOK, "ok")
 }

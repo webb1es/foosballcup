@@ -37,7 +37,7 @@ func TestRoutes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			routes(discardLogger(), tt.checks).ServeHTTP(rec, httptest.NewRequest(tt.method, tt.path, nil))
+			routes(discardLogger(), Deps{Ready: tt.checks}).ServeHTTP(rec, httptest.NewRequest(tt.method, tt.path, nil))
 
 			if rec.Code != tt.wantCode {
 				t.Errorf("status = %d, want %d", rec.Code, tt.wantCode)
@@ -53,7 +53,7 @@ func TestRun_ContextCancelled_ReturnsNil(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	if err := New("127.0.0.1:0", discardLogger()).Run(ctx); err != nil {
+	if err := New("127.0.0.1:0", discardLogger(), Deps{}).Run(ctx); err != nil {
 		t.Errorf("Run() error = %v, want nil", err)
 	}
 }
@@ -65,7 +65,7 @@ func TestRun_PortInUse_ReturnsError(t *testing.T) {
 	}
 	defer ln.Close()
 
-	if err := New(ln.Addr().String(), discardLogger()).Run(context.Background()); err == nil {
+	if err := New(ln.Addr().String(), discardLogger(), Deps{}).Run(context.Background()); err == nil {
 		t.Error("Run() error = nil, want listen error")
 	}
 }

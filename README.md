@@ -33,15 +33,27 @@ docs/architecture.md   rules, data model, API, deployment, theme
 seed/tournament.csv    name and format settings
 seed/players.csv       players
 seed/matches.csv       group fixtures and results
+main.go                server entry point
+internal/              server, rules, database, standings
+web/                   React UI
+brand/                 logo files
 ```
 
 ## Run locally
 
 ```
+cd web && npm install && npm run build && cd ..
 go run .
 ```
 
-Serves on `localhost:8080`. The first start creates the database and loads `seed/`.
+Serves the app and API on `localhost:8080`. The first start creates the database and loads `seed/`.
+
+For UI work, keep `go run .` running and start Vite in a second terminal. It reloads on save and forwards `/api` to the
+Go server:
+
+```
+cd web && npm run dev
+```
 
 | Variable | Default | Purpose |
 |---|---|---|

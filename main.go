@@ -16,10 +16,14 @@ import (
 	"github.com/webb1es/foosballcup/internal/seed"
 	"github.com/webb1es/foosballcup/internal/server"
 	"github.com/webb1es/foosballcup/internal/store"
+	"github.com/webb1es/foosballcup/internal/tournament"
 )
 
 //go:embed seed/*.csv
 var seedFiles embed.FS
+
+//go:embed all:web/dist
+var webDist embed.FS
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -48,7 +52,16 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
-	return server.New(cfg.Addr(), logger, db.PingContext).Run(ctx)
+	ui, err := fs.Sub(webDist, "web/dist")
+	if err != nil {
+		return fmt.Errorf("open embedded ui: %w", err)
+	}
+	deps := server.Deps{
+		Ready:        []server.ReadinessCheck{db.PingContext},
+		LoadSnapshot: func(ctx context.Context) (tournament.Snapshot, error) { return tournament.Load(ctx, db) },
+		UI:           ui,
+	}
+	return server.New(cfg.Addr(), logger, deps).Run(ctx)
 }
 
 func importSeed(ctx context.Context, logger *slog.Logger, db *sql.DB) error {

@@ -85,7 +85,9 @@ All tables carry `tournament_id`.
 | `pending_actions` | id, match_id, action (pause / restart / abandon), requested_by, approved_by, status, created_at, resolved_at |
 | `push_subscriptions` | id, admin_id, endpoint, p256dh, auth, created_at, last_error |
 
-`status` ∈ not_started, live, paused, provisional, confirmed, abandoned. `slot_a` / `slot_b` hold seeding labels ("A1", "W-QF1") so the bracket renders before players are known. `version` increments on every write. `standings` is a view over confirmed matches. Email and department are never served publicly.
+`status` ∈ not_started, live, paused, provisional, confirmed, abandoned. `slot_a` / `slot_b` hold seeding labels ("A1",
+"W-QF1") so the bracket renders before players are known. `version` increments on every write. Standings are computed in
+Go from confirmed group matches on each read, not stored. Email and department are never served publicly.
 
 ## 7. Routes
 
