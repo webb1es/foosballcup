@@ -5,6 +5,8 @@ import {ArcMotif, Header} from "./components/Header";
 import {BottomNav} from "./components/nav";
 
 const Home = lazy(() => import("./pages/Home"));
+const Fixtures = lazy(() => import("./pages/Fixtures"));
+const Standings = lazy(() => import("./pages/Standings"));
 const NotBuilt = lazy(() => import("./pages/NotBuilt"));
 
 function Shell() {
@@ -26,6 +28,8 @@ function Shell() {
                     <Suspense fallback={null}>
                         <Routes>
                             <Route path="/" element={<Home/>}/>
+                            <Route path="/fixtures" element={<Fixtures/>}/>
+                            <Route path="/standings" element={<Standings/>}/>
                             <Route path="*" element={<NotBuilt/>}/>
                         </Routes>
                     </Suspense>

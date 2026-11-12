@@ -2,18 +2,7 @@ import {render, screen, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {describe, expect, it, vi} from "vitest";
 import {App} from "./App";
-import type {Snapshot} from "./api/types";
-import {match, snapshot} from "./test/fixture";
-
-function serve(snap: Snapshot) {
-    vi.stubGlobal(
-        "fetch",
-        vi.fn(async () => new Response(JSON.stringify(snap), {
-            status: 200,
-            headers: {"Content-Type": "application/json"}
-        })),
-    );
-}
+import {match, serve, snapshot} from "./test/fixture";
 
 describe("Home page", () => {
     it("shows the next match when nothing is live, and the rest under Up next", async () => {

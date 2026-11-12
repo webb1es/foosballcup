@@ -1,4 +1,16 @@
+import {vi} from "vitest";
 import type {Match, Player, Snapshot} from "../api/types";
+
+/** Stubs fetch so /api/tournament returns the given snapshot. */
+export function serve(snap: Snapshot) {
+    vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response(JSON.stringify(snap), {
+            status: 200,
+            headers: {"Content-Type": "application/json"}
+        })),
+    );
+}
 
 export function player(id: number, fullName: string, nickname: string | null, group = "A"): Player {
     return {id, full_name: fullName, nickname, avatar_url: null, group};

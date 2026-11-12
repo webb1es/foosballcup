@@ -1,5 +1,6 @@
 import {useState} from "react";
 import {useTournament} from "../api/TournamentProvider";
+import {GroupSwitch} from "../components/GroupSwitch";
 import {LiveCard} from "../components/LiveCard";
 import {LatestResults, UpNext} from "../components/MatchLists";
 import {StandingsTable} from "../components/StandingsTable";
@@ -37,22 +38,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col gap-3 [grid-area:tables] md:gap-5 xl:gap-6">
-                {tournament.groups.length > 1 && (
-                    <div role="group" aria-label="Group"
-                         className="grid grid-cols-2 gap-1 rounded-full bg-surface-2 p-1 md:hidden">
-                        {tournament.groups.map((g) => (
-                            <button
-                                key={g}
-                                type="button"
-                                aria-pressed={g === selected}
-                                onClick={() => setGroup(g)}
-                                className={`min-h-10 rounded-full text-[13px] font-semibold ${g === selected ? "bg-ink text-white" : "text-body"}`}
-                            >
-                                Group {g}
-                            </button>
-                        ))}
-                    </div>
-                )}
+                <GroupSwitch groups={tournament.groups} selected={selected} onSelect={setGroup}/>
                 {standings.map((s) => (
                     <div key={s.group} className={s.group === selected ? "" : "hidden md:block"}>
                         <StandingsTable standing={s} players={players} qualifiers={tournament.qualifiers}/>

@@ -215,7 +215,14 @@ Shape: cards 24px radius with an 8px bottom-left corner, taken from the logo's o
 
 Live card: split in two halves, player A on night-2, player B on night, each with avatar, nickname and full name on their own side. Between them sit two concentric progress rings: outer ring player A in live, inner ring player B in ring-b, each filled to score ÷ `race_to` on a night-line track. The score sits inside the rings. A footer strip on night carries the LIVE label, group and match number. Ring diameter: 128px phone, 168px tablet, 220px desktop, 420px projector. Score inside: 34px, 46px, 60px, 120px.
 
-Components: two concentric arcs (brand outer, live inner) sit partly off-screen top-right behind the header on every screen, in place of a watermark. Day selector as pills under the title: past days on text, current day on live, future days outlined. Phone has a floating 4-tab nav on night with the active tab on live; tablet and desktop put the same tabs as pills in the header. Up next rows show an overlapping avatar pair, "A v B" in Space Grotesk, group and match number in muted, and a Chakra Petch tag at right. Standings use a pill group switch on phone and show both groups on tablet and desktop. The qualifying line is a dashed brand rule under the last qualifying place.
+Components: two concentric arcs (brand outer, live inner) sit partly off-screen top-right behind the header on every
+screen, in place of a watermark. Day selector as pills under the title: past days on text, current day on live, future
+days outlined. Phone has a floating 4-tab nav on night with the active tab on live; tablet and desktop put the same tabs
+as pills in the header. Up next rows show an overlapping avatar pair, "A v B" in Space Grotesk, group and match number
+in muted, and a Chakra Petch tag at right. Standings use a pill group switch on phone and show both groups on tablet and
+desktop. The qualifying line is a dashed brand rule under the last qualifying place. Fixtures groups match cards by day,
+with a player or nickname filter and day tabs kept in the URL (`?q=`, `?day=`). The Standings page adds goals for, goals
+against and the last five results from tablet up.
 
 Breakpoints: 390 reference. 768 and up moves nav to the header; Home puts the live card full width, then two columns: up next and latest results on the left, both group tables on the right. 1280 and up caps content at 1344px; Home has a left column with the live card, up next as a row of three cards and latest results, and a right column with both group tables.
 
