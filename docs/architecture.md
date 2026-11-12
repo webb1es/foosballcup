@@ -161,11 +161,17 @@ Plain env: `BASE_URL=https://foosballcup.webbies.dev`, `DATABASE_PATH`, `PORT`.
 
 ## 11. Deployment
 
-- One pod, `Recreate` strategy, 1 Gi persistent volume mounted at `/data`. SQLite allows one writer.
-- Deploys cause a few seconds of downtime. Never deploy during a live match.
-- CI builds the image on push to `main` and bumps the image tag in the platform repo. Argo CD syncs.
-- Backups: Litestream sidecar replicating the database continuously to object storage.
-- Rollback: revert the image tag.
+- Two environments on the loom platform (`webb1es/loom`, `workloads/foosballcup/`): staging at
+  `test.foosballcup.webbies.dev` (namespace `foosballcup-staging`) and prod at `foosballcup.webbies.dev`
+  (`foosballcup-prod`). Each has its own database.
+- One pod per environment, `Recreate` strategy, 1 Gi persistent volume mounted at `/data`. SQLite allows one writer.
+- Push to `staging`: CI checks, builds `ghcr.io/webb1es/foosballcup:sha-<sha>` and writes that tag to loom's staging
+  overlay. Argo CD syncs.
+- Promote by rebase-merging `staging` into `main` (fast-forward). CI writes the same tag to the prod overlay without
+  rebuilding.
+- Deploys cause a few seconds of downtime. Never promote to prod during a live match.
+- Backups: Litestream sidecar replicating the database to object storage. Not set up yet.
+- Rollback: set the previous tag in the overlay.
 
 ## 12. Seed data
 
@@ -215,27 +221,28 @@ Breakpoints: 390 reference. 768 and up moves nav to the header; Home puts the li
 
 ## 15. Out of scope
 
-Public sign-ups, player accounts, notifications to players, staging environment, photo upload, running several tournaments at once in the UI.
+Public sign-ups, player accounts, notifications to players, photo upload, running several tournaments at once in the UI.
 
 ## 16. Decisions
 
-| Date | Decision |
-|---|---|
-| 2026-11-11 | Two actors: public and admin. All admins equal. First admin seeded; the rest managed in the app. Every action logged. |
-| 2026-11-11 | Tournament format is configuration: groups, rounds, qualifiers, race to, points per win, match days. |
-| 2026-11-11 | Race to 10, no draws, win 1 point for this cup. Tiebreak ends with head-to-head, then shared rank. |
-| 2026-11-11 | Matches may start before their scheduled day. |
-| 2026-11-11 | Live scores public instantly. Final score needs submit by one admin and confirm by another. |
-| 2026-11-11 | Any admin can correct. Corrections return to provisional. |
-| 2026-11-11 | Pause, restart, abandon need a second admin. |
-| 2026-11-11 | Public sees provisional scores, labelled "Provisional". Only confirmed results count. |
-| 2026-11-11 | 60 minute sliding admin session. |
-| 2026-11-11 | Web Push to all admins when something needs their attention. |
-| 2026-11-11 | Projector mode included. |
-| 2026-11-11 | Nicknames, max 10 characters, admin-assigned, full name shown beneath. |
-| 2026-11-11 | Go standard library, SQLite, embedded React UI, SSE. Prod only. |
-| 2026-11-11 | Fully responsive, designed phone first. Theme: Paper, one fixed theme. |
+| Date       | Decision                                                                                                                                  |
+|------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| 2026-11-11 | Two actors: public and admin. All admins equal. First admin seeded; the rest managed in the app. Every action logged.                     |
+| 2026-11-11 | Tournament format is configuration: groups, rounds, qualifiers, race to, points per win, match days.                                      |
+| 2026-11-11 | Race to 10, no draws, win 1 point for this cup. Tiebreak ends with head-to-head, then shared rank.                                        |
+| 2026-11-11 | Matches may start before their scheduled day.                                                                                             |
+| 2026-11-11 | Live scores public instantly. Final score needs submit by one admin and confirm by another.                                               |
+| 2026-11-11 | Any admin can correct. Corrections return to provisional.                                                                                 |
+| 2026-11-11 | Pause, restart, abandon need a second admin.                                                                                              |
+| 2026-11-11 | Public sees provisional scores, labelled "Provisional". Only confirmed results count.                                                     |
+| 2026-11-11 | 60 minute sliding admin session.                                                                                                          |
+| 2026-11-11 | Web Push to all admins when something needs their attention.                                                                              |
+| 2026-11-11 | Projector mode included.                                                                                                                  |
+| 2026-11-11 | Nicknames, max 10 characters, admin-assigned, full name shown beneath.                                                                    |
+| 2026-11-11 | Go standard library, SQLite, embedded React UI, SSE. Prod only.                                                                           |
+| 2026-11-11 | Fully responsive, designed phone first. Theme: Paper, one fixed theme.                                                                    |
 | 2026-11-12 | Theme replaced by Chrome Arc: Paper base, navy split live card with progress rings, arc motif, cut-corner cards, Chakra Petch for scores. |
-| 2026-11-12 | Public name "Entelect Zim Foosball Cup" on every user-facing surface. Module, repo, binary and image are `foosballcup`. |
-| 2026-11-12 | Nickname limit raised to 12 characters to fit the seeded nicknames. |
-| 2026-11-12 | Seed data imports automatically on first start instead of through an import command. |
+| 2026-11-12 | Public name "Entelect Zim Foosball Cup" on every user-facing surface. Module, repo, binary and image are `foosballcup`.                   |
+| 2026-11-12 | Nickname limit raised to 12 characters to fit the seeded nicknames.                                                                       |
+| 2026-11-12 | Seed data imports automatically on first start instead of through an import command.                                                      |
+| 2026-11-12 | Staging and prod on loom, replacing prod only. Staging is `test.foosballcup.webbies.dev`.                                                 |

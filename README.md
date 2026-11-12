@@ -2,7 +2,7 @@
 
 Live scores, fixtures, standings and bracket for a foosball tournament, with a projector mode for the big screen. Works on phone, tablet and desktop.
 
-https://foosballcup.webbies.dev
+https://foosballcup.webbies.dev (staging: https://test.foosballcup.webbies.dev)
 
 ## What it does
 

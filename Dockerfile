@@ -25,5 +25,5 @@ COPY --from=build --chown=65532:65532 /out/data /data
 ENV PORT=8080
 ENV DATABASE_PATH=/data/foosballcup.db
 EXPOSE 8080
-USER nonroot:nonroot
+USER 65532:65532
 ENTRYPOINT ["/foosballcup"]

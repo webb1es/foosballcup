@@ -1,0 +1,66 @@
+# Re-tags loom's prod overlay with the image already built on staging and never rebuilds. Safe only because staging
+# reaches main by fast-forward (rebase merging only): https://loom.webbies.dev/operations/staging-to-prod-promotion/
+name: promote-main
+
+on:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: loom-tag-write-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  IMAGE: ghcr.io/webb1es/foosballcup
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compute image tag
+        id: tag
+        run: echo "tag=sha-$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Fails when main was not fast-forwarded from a staging commit that CI already built.
+      - name: Check the image was built on staging
+        run: docker buildx imagetools inspect "${IMAGE}:${{ steps.tag.outputs.tag }}" > /dev/null
+      - name: Mint loom installation token
+        id: loom-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.LOOM_APP_ID }}
+          private-key: ${{ secrets.LOOM_APP_PRIVATE_KEY }}
+          owner: webb1es
+          repositories: loom
+      - name: Checkout loom
+        uses: actions/checkout@v7
+        with:
+          repository: webb1es/loom
+          token: ${{ steps.loom-token.outputs.token }}
+          path: loom
+      - name: Write prod image tag to loom
+        working-directory: loom
+        env:
+          NEW_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          FILE=workloads/foosballcup/overlays/prod/kustomization.yaml
+          sed -i -E "s/^(    newTag:).*/\1 ${NEW_TAG}/" "$FILE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$FILE"
+          git commit -m "deploy(foosballcup): ${NEW_TAG} to prod"
+          for i in 1 2 3; do
+            git push && break
+            git pull --rebase
+            sleep 2
+          done
