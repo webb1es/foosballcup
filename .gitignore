@@ -1,0 +1,33 @@
+# Go
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+coverage.*
+
+# Node / Vite
+node_modules/
+web/dist/
+*.tsbuildinfo
+.vite/
+
+# Local data and secrets
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
