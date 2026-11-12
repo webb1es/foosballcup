@@ -76,10 +76,10 @@ All tables carry `tournament_id`.
 
 | Table | Columns |
 |---|---|
-| `tournaments` | id, name, groups, rounds, qualifiers, race_to, points_per_win, match_days (json), group_stage_locked_at, created_at |
-| `players` | id, tournament_id, reg_no, full_name, nickname (≤10, unique), avatar_url, group, email, department |
+| `tournaments` | id, name, group_count, rounds, qualifiers, race_to, points_per_win, match_days (json), group_stage_locked_at, created_at |
+| `players` | id, tournament_id, reg_no, full_name, nickname (≤12, unique), avatar_url, group_label, email, department |
 | `admins` | id, tournament_id, label, display_name, pin_hash (argon2id), active, failed_attempts, locked_until, created_by, created_at |
-| `matches` | id, tournament_id, stage (group / r16 / qf / sf / third / final), group, match_no, match_day, scheduled_date, slot_a, slot_b, player_a_id, player_b_id, score_a, score_b, status, started_at, full_time_at, submitted_by, submitted_at, confirmed_by, confirmed_at, scorer_admin_id, send_back_note, version |
+| `matches` | id, tournament_id, stage (group / r16 / qf / sf / third / final), group_label, match_no, match_day, scheduled_date, slot_a, slot_b, player_a_id, player_b_id, score_a, score_b, status, started_at, full_time_at, submitted_by, submitted_at, confirmed_by, confirmed_at, scorer_admin_id, send_back_note, version |
 | `match_events` | id, match_id, admin_id, type, payload, created_at |
 | `admin_events` | id, admin_id, target_admin_id, type (create / reset_pin / deactivate / reactivate), created_at |
 | `pending_actions` | id, match_id, action (pause / restart / abandon), requested_by, approved_by, status, created_at, resolved_at |
@@ -129,7 +129,7 @@ Every write re-checks §4 and writes an event row. An admin cannot deactivate th
 - Three wrong PINs lock the admin for 10 minutes.
 - Public routes are read-only. Writes require the cookie and pass the rules engine.
 - PINs are never displayed after creation. Resetting issues a new one.
-- Nicknames are set by admins only, max 10 characters.
+- Nicknames are set by admins only, max 12 characters.
 
 ## 9. Notifications
 
@@ -167,7 +167,7 @@ Plain env: `BASE_URL=https://foosballcup.webbies.dev`, `DATABASE_PATH`, `PORT`.
 
 ## 12. Seed data
 
-`seed/players.csv` and `seed/matches.csv` hold this cup's players and group fixtures, including results already played. `fooscup import` loads them once into a fresh database, inserting played matches as `confirmed` with a system admin "Import". A new tournament without a fixtures file gets its fixtures generated from the settings in §3.
+`seed/players.csv` and `seed/matches.csv` hold this cup's players and group fixtures, including results already played. Together with `seed/tournament.csv` (name and format settings) they are embedded in the binary and imported on the first start against an empty database, inserting played matches as `confirmed` with a system admin "Import". A new tournament without a fixtures file gets its fixtures generated from the settings in §3.
 
 ## 13. Live updates
 
@@ -234,3 +234,6 @@ Public sign-ups, player accounts, notifications to players, staging environment,
 | 2026-11-11 | Go standard library, SQLite, embedded React UI, SSE. Prod only. |
 | 2026-11-11 | Fully responsive, designed phone first. Theme: Paper, one fixed theme. |
 | 2026-11-12 | Theme replaced by Chrome Arc: Paper base, navy split live card with progress rings, arc motif, cut-corner cards, Chakra Petch for scores. |
+| 2026-11-12 | Public name "Entelect Zim Foosball Cup" on every user-facing surface. Module, repo, binary and image are `foosballcup`. |
+| 2026-11-12 | Nickname limit raised to 12 characters to fit the seeded nicknames. |
+| 2026-11-12 | Seed data imports automatically on first start instead of through an import command. |

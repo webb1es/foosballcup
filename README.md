@@ -1,4 +1,4 @@
-# Foosball Cup
+# Entelect Zim Foosball Cup
 
 Live scores, fixtures, standings and bracket for a foosball tournament, with a projector mode for the big screen. Works on phone, tablet and desktop.
 
@@ -30,6 +30,20 @@ Single Go binary, standard library, SQLite, embedded React UI, server-sent event
 
 ```
 docs/architecture.md   rules, data model, API, deployment, theme
+seed/tournament.csv    name and format settings
 seed/players.csv       players
 seed/matches.csv       group fixtures and results
 ```
+
+## Run locally
+
+```
+go run .
+```
+
+Serves on `localhost:8080`. The first start creates the database and loads `seed/`.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PORT` | `8080` | HTTP port |
+| `DATABASE_PATH` | `foosballcup.db` | SQLite file. The container uses `/data/foosballcup.db`. |

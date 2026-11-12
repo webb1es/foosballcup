@@ -1,0 +1,12 @@
+.git
+.github
+.idea
+.vscode
+docs
+brand
+logo.png
+*.md
+Dockerfile
+.dockerignore
+.env
+.env.*
