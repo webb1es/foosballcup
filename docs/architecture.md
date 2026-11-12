@@ -179,29 +179,37 @@ One fixed theme. No dark mode.
 
 | Token | Value | Use |
 |---|---|---|
-| bg | #E6E9EF | Page |
-| surface | #F5F7FA | Cards, header, nav |
-| surface-2 | #DCE1EA | Confirmed rows, table headers, disabled |
+| bg | #EEF0F4 | Page |
+| surface | #FFFFFF | Cards, lists, tables |
+| surface-2 | #DCE1EA | Row separators, table headers, disabled |
 | border | #C5CCD9 | Borders |
-| text | #141B2B | Body, admin header bars, score tiles |
+| text | #141B2B | Body, admin header bars, active group switch |
 | body | #3E4A66 | Secondary text |
 | muted | #5B6880 | Labels, full names, metadata |
-| faint | #9AA5BB | Placeholders, disabled text |
-| brand | #2B5BC9 | Primary buttons, links, confirmed, active nav, qualifying line |
-| live | #9BD34A | GOAL button, Live chip, live borders |
+| faint | #9AA5BB | Placeholders, disabled text, ranks outside qualifying |
+| brand | #2B5BC9 | Primary buttons, links, confirmed, qualifying ranks and line, arc motif |
+| live | #9BD34A | GOAL button, Live chip, live borders, player A ring, active nav, current day |
 | live-tint | #EEF7DF | Live strip background |
-| live-text | #3F7A0B | LIVE label, live dot, rank 1 |
+| live-text | #3F7A0B | LIVE label on light surfaces, rank 1 |
 | on-live | #0B1220 | Text on live fill |
+| night | #0A1430 | Live card, player B half, floating nav |
+| night-2 | #1D3F8F | Live card player A half |
+| night-line | #22335F | Ring tracks on night |
+| ring-b | #4C7DF0 | Player B ring and avatar outline |
+| on-night | #FFFFFF | Names and leading score on night |
+| on-night-muted | #A8B3CC | Full names, trailing score, metadata on night |
 
-Lime means happening now. Blue means confirmed or primary action. Dashed blue means provisional.
+Lime means happening now. Blue means confirmed or primary action. Dashed blue means provisional. Navy is reserved for the live match and the nav.
 
-Type: Space Grotesk 700 for scores, headings and nicknames, tabular numerals. Inter for body. Scores: 52px phone, 76px tablet, 112px desktop, 180px projector. Nickname bold with full name beneath in muted 11 to 12px.
+Type: Chakra Petch 700 for scores, ranks, points and short labels (match numbers, NEXT, DAY 2), tabular numerals. Space Grotesk 700 for headings and nicknames. Inter for body. Nickname bold with full name beneath in muted 11 to 12px.
 
-Shape: 12px radius on cards and inputs, 10px on buttons, pills for chips and tabs. 1px borders. Live card 1.5px lime, 3px on projector. Provisional 1.5px dashed brand. No shadows or gradients. Touch targets at least 44px.
+Shape: cards 24px radius with an 8px bottom-left corner, taken from the logo's open curve. The live card uses 28px with the same 8px corner. Inner lists 14px. Pills for chips, day selector, group switch and tabs. 1px borders. Live card 1.5px lime, 3px on projector. Provisional 1.5px dashed brand. No shadows or gradients. Touch targets at least 44px.
 
-Components: public header on surface; admin header on ink. Phone has a 4-tab bottom nav; tablet and desktop use header pill tabs. Match rows show an overlapping avatar pair, nickname line, full names in muted, score at right. Standings tables mark the qualifying line with a dashed rule under the last qualifying place. Logo watermark bottom-right on every screen at 5 to 6 percent opacity.
+Live card: split in two halves, player A on night-2, player B on night, each with avatar, nickname and full name on their own side. Between them sit two concentric progress rings: outer ring player A in live, inner ring player B in ring-b, each filled to score ÷ `race_to` on a night-line track. The score sits inside the rings. A footer strip on night carries the LIVE label, group and match number. Ring diameter: 128px phone, 168px tablet, 220px desktop, 420px projector. Score inside: 34px, 46px, 60px, 120px.
 
-Breakpoints: 390 reference. 768 and up moves nav to the header and Home to two columns. 1280 and up caps content at 1344px.
+Components: two concentric arcs (brand outer, live inner) sit partly off-screen top-right behind the header on every screen, in place of a watermark. Day selector as pills under the title: past days on text, current day on live, future days outlined. Phone has a floating 4-tab nav on night with the active tab on live; tablet and desktop put the same tabs as pills in the header. Up next rows show an overlapping avatar pair, "A v B" in Space Grotesk, group and match number in muted, and a Chakra Petch tag at right. Standings use a pill group switch on phone and show both groups on tablet and desktop. The qualifying line is a dashed brand rule under the last qualifying place.
+
+Breakpoints: 390 reference. 768 and up moves nav to the header; Home puts the live card full width, then two columns: up next and latest results on the left, both group tables on the right. 1280 and up caps content at 1344px; Home has a left column with the live card, up next as a row of three cards and latest results, and a right column with both group tables.
 
 ## 15. Out of scope
 
@@ -225,3 +233,4 @@ Public sign-ups, player accounts, notifications to players, staging environment,
 | 2026-11-11 | Nicknames, max 10 characters, admin-assigned, full name shown beneath. |
 | 2026-11-11 | Go standard library, SQLite, embedded React UI, SSE. Prod only. |
 | 2026-11-11 | Fully responsive, designed phone first. Theme: Paper, one fixed theme. |
+| 2026-11-12 | Theme replaced by Chrome Arc: Paper base, navy split live card with progress rings, arc motif, cut-corner cards, Chakra Petch for scores. |
